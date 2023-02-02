@@ -1,4 +1,3 @@
-#include <exception>
 #include <Windows.h>
 
 #include "interfaces.h"
@@ -25,16 +24,10 @@ BOOL WINAPI DllMain(
     DWORD fdwReason,
     LPVOID)
 {
-    switch (fdwReason)
+    if (fdwReason == DLL_PROCESS_ATTACH)
     {
-    case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
         CreateThread(nullptr, 0, init_thread, hinstDLL, 0, nullptr);
-        break;
-    case DLL_PROCESS_DETACH:
-        hooks::unhook_interfaces();
-        break;
-    default: break;
     }
 
     return TRUE;

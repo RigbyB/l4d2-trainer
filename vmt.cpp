@@ -1,30 +1,30 @@
 ﻿#include "vmt.h"
 
-#include <cstring>
 #include <stdexcept>
 #include <string>
 
-void vmt_hook::init(void* class_)
+vmt_hook::vmt_hook(void* class_)
 {
+    class_owner_ = class_;
     original_table_ = get_vtable(class_);
 
     num_functions_ = 0;
     while (original_table_[num_functions_])
         num_functions_ += 1;
 
-    new_table_ = new void*[num_functions_];
-    memcpy(new_table_, original_table_, sizeof(void*) * num_functions_);
+    new_table_ = std::make_unique<void*[]>(num_functions_);
+    memcpy(new_table_.get(), original_table_, sizeof(void*) * num_functions_);
 
-    override_vtable(class_, new_table_);
+    override_vtable(class_, new_table_.get());
+}
 
-    initialised_ = true;
+vmt_hook::~vmt_hook()
+{
+    override_vtable(class_owner_, original_table_);
 }
 
 void* vmt_hook::hook_function(const size_t index, void* hook_function) const
 {
-    if (!initialised_)
-        return nullptr;
-
     if (index > num_functions_)
     {
         throw std::runtime_error(
